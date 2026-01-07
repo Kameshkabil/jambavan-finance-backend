@@ -1,7 +1,7 @@
 const express = require("express");
 const { addTransaction, getRecentTransactions, updateTransaction, deleteTransaction, getOverallSummary, getAllTransactions, filterTransactions } = require("../controllers/transactionCtrl");
 const { addTransactionValidator } = require("../validators/transactionValidator");
-const { authMiddleware, isAdmin } = require("../middlewares/authmiddleware");
+const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware");
 const router =  express.Router();
 
 router.post("/add", authMiddleware, isAdmin, addTransactionValidator, addTransaction);
