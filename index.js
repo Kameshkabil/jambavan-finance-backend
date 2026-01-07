@@ -18,7 +18,7 @@ dbConnect();
 //   credentials: true
 // }));
 
-const cors = require("cors");
+// const cors = require("cors");
 
 app.use(cors({
   origin: "https://jambavan-finance-frontend.onrender.com",
