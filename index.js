@@ -13,10 +13,19 @@ const cors = require("cors");
 
 dbConnect();
 
+// app.use(cors({
+//   origin: "https://jambavan-finance-frontend.onrender.com",
+//   credentials: true
+// }));
+
+const cors = require("cors");
+
 app.use(cors({
   origin: "https://jambavan-finance-frontend.onrender.com",
-  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
 
 app.use(morgan('dev'));
 app.use(bodyParser.json());
