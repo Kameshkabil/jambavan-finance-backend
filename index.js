@@ -20,11 +20,13 @@ dbConnect();
 
 // const cors = require("cors");
 
-app.use(cors({
+const corsOptions = {
   origin: "https://jambavan-finance-frontend.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+  credentials: true
+};
+
+// 2. Apply CORS to all requests
+app.use(cors(corsOptions));
 
 
 app.use(morgan('dev'));
