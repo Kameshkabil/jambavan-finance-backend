@@ -34,6 +34,8 @@ const loginUser = asyncHandler (async (req, res) => {
         );
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "none",
             maxAge: 74 * 60 * 60 * 1000, 
         });
         res.json({
