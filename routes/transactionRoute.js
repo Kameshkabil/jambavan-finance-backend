@@ -1,17 +1,20 @@
 const express = require("express");
 const { addTransaction, getRecentTransactions, updateTransaction, deleteTransaction, getOverallSummary, getAllTransactions, filterTransactions } = require("../controllers/transactionCtrl");
 const { addTransactionValidator } = require("../validators/transactionValidator");
-const { authMiddleware, isAdmin } = require("../middlewares/authMiddleware");
+const { authMiddleware, isAdminOrSuperAdmin } = require("../middlewares/authMiddleware");
 const router =  express.Router();
 
-router.post("/add", authMiddleware, isAdmin, addTransactionValidator, addTransaction);
-router.get("/recent", authMiddleware, isAdmin, getRecentTransactions);
-router.put("/:id", authMiddleware, isAdmin, updateTransaction);
-router.delete("/:id", authMiddleware, isAdmin, deleteTransaction);
+router.use(authMiddleware);
+router.use(isAdminOrSuperAdmin);
 
-router.get("/overall-summary", authMiddleware, isAdmin, getOverallSummary);
+router.post("/add", authMiddleware, addTransactionValidator, addTransaction);
+router.get("/recent", getRecentTransactions);
+router.put("/:id", updateTransaction);
+router.delete("/:id", deleteTransaction);
+
+router.get("/overall-summary", getOverallSummary);
 router.get('/', getAllTransactions);
 
-router.get('/filter', authMiddleware, isAdmin, filterTransactions );
+router.get('/filter', filterTransactions );
 
 module.exports = router;

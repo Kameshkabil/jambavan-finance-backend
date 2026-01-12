@@ -92,18 +92,29 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 
 
 // ✅ ADMIN CHECK (100% SAFE)
-const isAdmin = asyncHandler(async (req, res, next) => {
-  if (!req.user || !req.user.email) {
-    return res.status(401).json({ message: "User not authenticated" });
+// const isAdmin = asyncHandler(async (req, res, next) => {
+//   if (!req.user || !req.user.email) {
+//     return res.status(401).json({ message: "User not authenticated" });
+//   }
+
+//   const adminUser = await User.findOne({ email: req.user.email });
+
+//   if (!adminUser || adminUser.role !== "admin") {
+//     return res.status(403).json({ message: "You are not an admin" });
+//   }
+
+//   next();
+// });
+
+const isAdminOrSuperAdmin = asyncHandler(async (req, res, next) => {
+  if (req.user.role === "admin" || req.user.role === "super_admin") {
+    return next();
   }
 
-  const adminUser = await User.findOne({ email: req.user.email });
-
-  if (!adminUser || adminUser.role !== "admin") {
-    return res.status(403).json({ message: "You are not an admin" });
-  }
-
-  next();
+  return res.status(403).json({ message: "Access denied" });
 });
 
-module.exports = { authMiddleware, isAdmin };
+
+
+
+module.exports = { authMiddleware, isAdminOrSuperAdmin };

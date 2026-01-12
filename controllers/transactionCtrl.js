@@ -46,31 +46,32 @@ const getRecentTransactions = async (req, res) => {
 const updateTransaction = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
 
-    const {
-      type,
-      category,
-      amount,
-      notes,
-      transactionDate
-    } = req.body;
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid transaction ID" });
+    }
 
-    if (!type || !category || !amount || !transactionDate) {
-      return res.status(400).json({
-        message: "Required fields missing"
+    const transaction = await Transaction.findById(id);
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    // Allow only own edits if admin
+    if (
+      req.user.role === "admin" &&
+      transaction.userId.toString() !== req.user.id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You cannot edit another admin's transaction"
       });
     }
 
-    const transaction = await Transaction.findOne({
-      _id: id,
-      userId
-    });
+    const { type, category, amount, notes, transactionDate } = req.body;
 
-    if (!transaction) {
-      return res.status(404).json({
-        message: "Transaction not found"
-      });
+    if (!type || !category || !amount || !transactionDate) {
+      return res.status(400).json({ message: "Required fields missing" });
     }
 
     transaction.type = type;
@@ -88,40 +89,159 @@ const updateTransaction = async (req, res) => {
 
   } catch (error) {
     console.error("Update Transaction Error:", error);
-    res.status(500).json({
-      message: "Server error while updating transaction"
-    });
+    res.status(500).json({ message: "Server error while updating transaction" });
   }
 };
 
 const deleteTransaction = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user._id;
+  try {
+    const { id } = req.params;
 
-        const transaction = await Transaction.findOne({
-            _id: id,
-            userId
-        });
-
-        if (!transaction) {
-            return res.status(404).json({
-                message: "Transaction not found"
-            });
-        }
-
-        await transaction.deleteOne();
-
-        res.status(200).json({
-            message: "Transaction deleted successfully"
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            message: "Failed to delete transaction"
-        });
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid transaction ID" });
     }
+
+    const transaction = await Transaction.findById(id);
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    // Admin cannot delete someone else's transaction
+    if (
+      req.user.role === "admin" &&
+      transaction.userId.toString() !== req.user.id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You cannot delete another admin's transaction"
+      });
+    }
+
+    await transaction.deleteOne();
+
+    res.status(200).json({ message: "Transaction deleted successfully" });
+
+  } catch (error) {
+    console.error("Delete Transaction Error:", error);
+    res.status(500).json({ message: "Failed to delete transaction" });
+  }
 };
+
+
+// const updateTransaction = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const userId = req.user.id;
+
+//     const {
+//       type,
+//       category,
+//       amount,
+//       notes,
+//       transactionDate
+//     } = req.body;
+
+//     if (!type || !category || !amount || !transactionDate) {
+//       return res.status(400).json({
+//         message: "Required fields missing"
+//       });
+//     }
+
+//     // const transaction = await Transaction.findOne({
+//     //   _id: id,
+//     //   userId
+//     // });
+
+//     // if (!transaction) {
+//     //   return res.status(404).json({
+//     //     message: "Transaction not found"
+//     //   });
+//     // }
+
+//     let transaction = await Transaction.findById(id);
+
+// if (!transaction) {
+//   return res.status(404).json({ message: "Transaction not found" });
+// }
+
+// // If normal admin, allow own data only
+// if (
+//   req.user.role === "admin" &&
+//   transaction.userId.toString() !== req.user._id.toString()
+// ) {
+//   return res.status(403).json({
+//     message: "You cannot edit other admin's transaction"
+//   });
+// }
+
+
+//     transaction.type = type;
+//     transaction.category = category;
+//     transaction.amount = amount;
+//     transaction.notes = notes || "";
+//     transaction.transactionDate = new Date(transactionDate);
+
+//     await transaction.save();
+
+//     res.status(200).json({
+//       message: "Transaction updated successfully",
+//       transaction
+//     });
+
+//   } catch (error) {
+//     console.error("Update Transaction Error:", error);
+//     res.status(500).json({
+//       message: "Server error while updating transaction"
+//     });
+//   }
+// };
+
+// const deleteTransaction = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const userId = req.user._id;
+
+//         // const transaction = await Transaction.findOne({
+//         //     _id: id,
+//         //     userId
+//         // });
+
+//         // if (!transaction) {
+//         //     return res.status(404).json({
+//         //         message: "Transaction not found"
+//         //     });
+//         // }
+
+//         const transaction = await Transaction.findById(id);
+
+// if (!transaction) {
+//   return res.status(404).json({ message: "Transaction not found" });
+// }
+
+// // admin cannot delete others data
+// if (
+//   req.user.role === "admin" &&
+//   transaction.userId.toString() !== req.user._id.toString()
+// ) {
+//   return res.status(403).json({
+//     message: "You cannot delete other admin's transaction"
+//   });
+// }
+
+
+//         await transaction.deleteOne();
+
+//         res.status(200).json({
+//             message: "Transaction deleted successfully"
+//         });
+
+//     } catch (error) {
+//         res.status(500).json({
+//             message: "Failed to delete transaction"
+//         });
+//     }
+// };
 
 const getOverallSummary = async (req, res) => {
     const result = await Transaction.aggregate([
